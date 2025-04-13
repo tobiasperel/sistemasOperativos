@@ -6,7 +6,61 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+int calcular(const char *expresion) {
+    int num1, num2, resultado;
+    char operador;
+
+    // Usamos sscanf para extraer los dos números y el operador de la expresión
+    if (sscanf(expresion, "%d%c%d", &num1, &operador, &num2) != 3) {
+        printf("Formato incorrecto\n");
+        return 0;  // En caso de error, retornamos 0.
+    }
+
+    // Realizamos la operación según el operador
+    switch (operador) {
+        case '+':
+            resultado = num1 + num2;
+            break;
+        case '-':
+            resultado = num1 - num2;
+            break;
+        case '*':
+            resultado = num1 * num2;
+            break;
+        case '/':
+            if (num2 != 0) {
+                resultado = num1 / num2;
+            } else {
+                printf("Error: División por cero\n");
+                return 0;  // Si hay división por cero, retornamos 0.
+            }
+            break;
+        default:
+            printf("Operador no reconocido\n");
+            return 0;  // Si el operador no es válido, retornamos 0.
+    }
+
+    return resultado;
+}
+
+
+void hijo(int client_socket){
+    char buffer[BUFFER_SIZE];
+    int result;
+    while (1){
+        memset(buffer, 0, BUFFER_SIZE);
+        ssize_t bytes_recibidos = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_recibidos <= 0) break;
+        if (strcmp(buffer, "exit") == 0) break;
+        result = calcular(buffer);
+        send(client_socket, &result, sizeof(result), 0);
+    }
+    close(client_socket);
+    exit(0);
+}
+
 int main() {
+     
     int server_socket;
     int client_socket;
     struct sockaddr_un server_addr;
@@ -25,13 +79,21 @@ int main() {
 
     printf("Servidor: esperando conexión del cliente...\n");
     while(1) {
-        client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &clen);
-        recv(client_socket, &num, sizeof(num), 0);
-        printf("Servidor: recibí %d del cliente!\n", num);
-        num *= 2;
-        send(client_socket, &num, sizeof(num), 0);
-        close(client_socket);
+
+        client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &clen);
+        if (client_socket < 0) continue;
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            close(server_socket); // el hijo no necesita escuchar más conexiones
+            hijo();
+
+        } else {
+            close(client_socket); // el padre no atiende al cliente directamente
+        }
+
     }
 
     exit(0);
 }
+
