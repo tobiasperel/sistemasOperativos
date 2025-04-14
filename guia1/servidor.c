@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-
+#define BUFFER_SIZE 1024
 int calcular(const char *expresion) {
     int num1, num2, resultado;
     char operador;
@@ -48,9 +48,10 @@ void hijo(int client_socket){
     char buffer[BUFFER_SIZE];
     int result;
     while (1){
-        memset(buffer, 0, BUFFER_SIZE);
         ssize_t bytes_recibidos = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        printf("bytes recibidos: %ld\n", bytes_recibidos); // si hace control c
         if (bytes_recibidos <= 0) break;
+        if(strlen(buffer) == 0) continue;
         if (strcmp(buffer, "exit") == 0) break;
         result = calcular(buffer);
         send(client_socket, &result, sizeof(result), 0);
@@ -86,7 +87,7 @@ int main() {
         pid_t pid = fork();
         if (pid == 0) {
             close(server_socket); // el hijo no necesita escuchar más conexiones
-            hijo();
+            hijo(client_socket);
 
         } else {
             close(client_socket); // el padre no atiende al cliente directamente

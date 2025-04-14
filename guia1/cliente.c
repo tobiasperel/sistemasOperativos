@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#define BUFFER_SIZE 1024
+
 int main() {
 
 	int server_socket;
@@ -20,22 +22,19 @@ int main() {
         exit(1);
     }
 
-	while (1) {
-        fflush(stdout);
+    char buffer[BUFFER_SIZE]; // Declare the buffer variable
+    int resultado;
+    while (1) {
+        printf("Conectado al servidor. Ingrese expresiones (ej: 10+5) o 'exit' para salir:\n");
 
         if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) break; // quizas hay que sacarlo
         
-        write(sockfd, &buffer, sizeof(buffer));
+        write(server_socket, &buffer, sizeof(buffer));
         if (strncmp(buffer, "exit", 4) == 0) break;
 
-        memset(buffer, 0, BUFFER_SIZE);
-         ssize_t n = recv(sockfd, buffer, BUFFER_SIZE - 1, 0);
-         if (n <= 0) {
-             printf("El servidor cerró la conexión.\n");
-             break;
-         }
-
-        printf("Respuesta: %s", buffer);
+        read(server_socket, &resultado, sizeof(resultado));
+          
+        printf("Respuesta: %d\n", resultado);
     }
     close(server_socket);
 	exit(0);
