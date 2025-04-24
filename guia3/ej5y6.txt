@@ -1,0 +1,15 @@
+mutex = 1.
+
+
+preparado()
+
+mutex.wait()
+count = count + 1
+mutex.signal()
+
+if (count == n)
+    barrera.signal()
+
+barrera.wait()
+barrera.signal() // esta esla linea que faltaba
+critica()

@@ -1,0 +1,18 @@
+Ejercicio 4 ⋆
+Demostrar que, en caso de que las operaciones de semáforos wait() y signal() no se ejecuten
+atómicamente, entonces se viola la propiedad de exclusión mutua, es decir que un recurso no puede
+estar asignado a más de un proceso.
+Pista: Revise el funcionamiento interno del wait() y del signal() mostrados en clase, el cual no
+se haría de forma atómica, y luego piense en una traza que muestre lo propuesto.
+
+w a i t ( s ) :
+    w h i l e ( s <=0) d o r m i r ( ) ;
+    s −−;
+
+
+s i g n a l ( s ) :
+    s++;
+    i f ( a l g u i e n e s p e r a p o r s ) d e s p e r t a r a a l g u n o ;
+
+
+la operacion s-- y s++ no es atómica por ende podria pasar que dos procesos tomen esta y lo realicen de forma paralela.
